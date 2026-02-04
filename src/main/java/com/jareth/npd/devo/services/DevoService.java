@@ -2,6 +2,7 @@ package com.jareth.npd.devo.services;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,6 +57,7 @@ public class DevoService {
                 devo.setThought((String) data.get("thought"));
                 devo.setResponse((String) data.get("response"));
                 devo.setPassage((String) data.get("passage_reference"));
+                devo.setAudioUrl((String) data.get("audio_url"));
 
                 String bibleYearRaw = (String) data.get("bible_in_a_year_references");
 
@@ -221,15 +223,35 @@ public class DevoService {
             container.select(".chapternum, sup, .footnotes, .crossrefs, h3").remove();
 
             // Extraer texto y limpiar números de versículos con RegEx
-            String texto = container.text();
-            texto = texto.replaceAll("\\[\\w+\\]", ""); // Elimina [a], [b]
-            texto = texto.replaceAll("\\b\\d+\\b", ""); // Elimina números de versículo
+            String txt = container.text();
+            txt = txt.replaceAll("\\[\\w+\\]", ""); // Elimina [a], [b]
+            txt = txt.replaceAll("\\b\\d+\\b", ""); // Elimina números de versículo
 
-            return texto.replaceAll("\\s+", " ").trim();
+            return txt.replaceAll("\s+", " ").trim();
 
         } catch (IOException e) {
             return "Error descargando " + passage + ": " + e.getMessage();
         }
+    }
+
+    public List<Devo> getDevosByRange(LocalDate fromDate, LocalDate toDate) {
+        try {
+            return repo.findByDateBetween(fromDate, toDate);
+        } catch (Exception e) {
+            List<Devo> devoList = new java.util.ArrayList<>();
+            for (int i = 0; i < toDate.toEpochDay() - fromDate.toEpochDay(); i++) {
+                LocalDate date = fromDate.plusDays(i);
+                devoList.add(getDevoByDate(date));
+            }
+            return devoList;
+        }    
+    }
+
+    public void deleteDevo(Long id) {
+        if (!repo.existsById(id)) {
+            throw new RuntimeException("No se encontró el devocional para borrar");
+        }
+        repo.deleteById(id);    
     }
 
 }

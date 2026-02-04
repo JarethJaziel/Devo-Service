@@ -33,4 +33,5 @@ public class Devo {
     private String response;
     private String thought;
     private String bibleInYear;
+    private String audioUrl;
 }

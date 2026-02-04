@@ -6,16 +6,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.jareth.npd.devo.model.Devo;
+import com.jareth.npd.devo.model.DevoDTO;
 import com.jareth.npd.devo.services.DevoService;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/devocionales")
 // El CrossOrigin es vital para que tu Angular en GitHub Pages pueda entrar
-@CrossOrigin(origins = "*") 
+@CrossOrigin(origins = "*")
 public class DevocionalController {
 
     @Autowired
@@ -23,35 +26,53 @@ public class DevocionalController {
 
     /**
      * Endpoint principal para obtener el devocional del día.
-     * Ejemplo: GET /api/devocionales/2026-02-04?plataforma=whatsapp
+     * Ejemplo: GET /api/devocionales/2026-02-04
      */
-    @GetMapping("/{fecha}")
+    @GetMapping("/{date}")
     public ResponseEntity<?> getDevo(
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
-            @RequestParam(defaultValue = "web") String plataforma) {
-
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         try {
-            // 1. Obtenemos el devocional (Trae de DB o hace Scraping si no existe)
-            Devo devo = service.getDevoByDate(fecha);
-
-            if (devo == null) {
+            Devo devo = service.getDevoByDate(date);
+            if (devo == null)
                 return ResponseEntity.notFound().build();
-            }
 
-            // 2. Generamos el mensaje formateado según la plataforma elegida
-            String mensaje = service.getDevoByPlatform(devo, plataforma);
-
-            // 3. Empaquetamos todo en un Map (esto se envía como JSON a Angular)
-            Map<String, Object> response = new HashMap<>();
-            response.put("datos", devo);
-            response.put("mensajeFormateado", mensaje);
+            // Creamos la respuesta con ambos formatos
+            DevoDTO response = new DevoDTO(
+                    devo,
+                    service.getDevoByPlatform(devo, "whatsapp"),
+                    service.getDevoByPlatform(devo, "web"));
 
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Error al procesar el devocional: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(error);
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/range")
+    public ResponseEntity<List<DevoDTO>> getByRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        List<Devo> devos = service.getDevosByRange(fromDate, toDate);
+
+        // Transformamos cada Devo en un DevoDTO con sus mensajes
+        List<DevoDTO> response = devos.stream().map(devo -> {
+            String ws = service.getDevoByPlatform(devo, "whatsapp");
+            String web = service.getDevoByPlatform(devo, "web");
+            return new DevoDTO(devo, ws, web);
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteDevo(@PathVariable Long id) {
+        try {
+            service.deleteDevo(id);
+            Map<String, String> response = new HashMap<>();
+            response.put("mensaje", "Devocional eliminado con éxito");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error al eliminar: " + e.getMessage()));
         }
     }
 
@@ -60,6 +81,6 @@ public class DevocionalController {
      */
     @GetMapping("/health")
     public String healthCheck() {
-        return "Backend de Devocionales funcionando correctamente en Java 21";
+        return "Backend de Devocionales funcionando correctamente";
     }
 }
