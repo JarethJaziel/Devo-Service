@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+
+
 public interface DevoRepo extends JpaRepository<Devo, Long> {
-    Optional<Devo> findByFecha(LocalDate fecha);
+    Optional<Devo> findByDate(LocalDate date);
 }

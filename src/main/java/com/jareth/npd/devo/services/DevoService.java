@@ -27,7 +27,7 @@ public class DevoService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public Devo getDevoByDate(LocalDate date) {
-        return repo.findByFecha(date).orElseGet(
+        return repo.findByDate(date).orElseGet(
                 () -> {
                     Devo devo = getByExternalApi(date);
                     return repo.save(devo);
