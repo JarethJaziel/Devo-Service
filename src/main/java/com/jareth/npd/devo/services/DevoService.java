@@ -235,23 +235,39 @@ public class DevoService {
     }
 
     public List<Devo> getDevosByRange(LocalDate fromDate, LocalDate toDate) {
-        try {
-            return repo.findByDateBetween(fromDate, toDate);
-        } catch (Exception e) {
-            List<Devo> devoList = new java.util.ArrayList<>();
-            for (int i = 0; i < toDate.toEpochDay() - fromDate.toEpochDay(); i++) {
-                LocalDate date = fromDate.plusDays(i);
-                devoList.add(getDevoByDate(date));
+        // 1. Intentamos traer lo que ya existe en la DB (Rápido)
+        List<Devo> existing = repo.findByFechaBetweenOrderByFechaAsc(fromDate, toDate);
+
+        // Si el rango es pequeño (ej. una semana) y quieres asegurar que estén todos:
+        long daysInRange = java.time.temporal.ChronoUnit.DAYS.between(fromDate, toDate) + 1;
+
+        if (existing.size() < daysInRange) {
+            // Solo entramos aquí si faltan días.
+            // ¡Ojo! Si el rango es muy grande, esto podría dar timeout en Render.
+            for (LocalDate date = fromDate; !date.isAfter(toDate); date = date.plusDays(1)) {
+                final LocalDate currentDate = date;
+                boolean exists = existing.stream().anyMatch(d -> d.getDate().equals(currentDate));
+                if (!exists) {
+                    try {
+                        // getDevoByDate ya debería guardar en DB internamente
+                        getDevoByDate(currentDate);
+                    } catch (Exception e) {
+                        // Si un día falla el scraping, ignoramos y seguimos
+                    }
+                }
             }
-            return devoList;
-        }    
+            // Refrescamos la lista tras el scraping
+            return repo.findByFechaBetweenOrderByFechaAsc(fromDate, toDate);
+        }
+
+        return existing;
     }
 
     public void deleteDevo(Long id) {
         if (!repo.existsById(id)) {
             throw new RuntimeException("No se encontró el devocional para borrar");
         }
-        repo.deleteById(id);    
+        repo.deleteById(id);
     }
 
 }
