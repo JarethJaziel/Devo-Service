@@ -236,7 +236,7 @@ public class DevoService {
 
     public List<Devo> getDevosByRange(LocalDate fromDate, LocalDate toDate) {
         // 1. Intentamos traer lo que ya existe en la DB (Rápido)
-        List<Devo> existing = repo.findByFechaBetweenOrderByFechaAsc(fromDate, toDate);
+        List<Devo> existing = repo.findByDateBetweenOrderByDateAsc(fromDate, toDate);
 
         // Si el rango es pequeño (ej. una semana) y quieres asegurar que estén todos:
         long daysInRange = java.time.temporal.ChronoUnit.DAYS.between(fromDate, toDate) + 1;
@@ -257,7 +257,7 @@ public class DevoService {
                 }
             }
             // Refrescamos la lista tras el scraping
-            return repo.findByFechaBetweenOrderByFechaAsc(fromDate, toDate);
+            return repo.findByDateBetweenOrderByDateAsc(fromDate, toDate);
         }
 
         return existing;

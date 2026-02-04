@@ -14,6 +14,5 @@ public interface DevoRepo extends JpaRepository<Devo, Long> {
     Optional<Devo> findByDate(LocalDate date);
 
     List<Devo> findByDateBetween(LocalDate from, LocalDate to);
-
-    List<Devo> findByFechaBetweenOrderByFechaAsc(LocalDate fromDate, LocalDate toDate);
+    List<Devo> findByDateBetweenOrderByDateAsc(LocalDate fromDate, LocalDate toDate);
 }
