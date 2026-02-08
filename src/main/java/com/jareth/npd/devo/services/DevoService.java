@@ -2,7 +2,9 @@ package com.jareth.npd.devo.services;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -77,8 +79,14 @@ public class DevoService {
 
     public String getDevoByPlatform(Devo devo, String plataforma) {
         // Valores por defecto para evitar nulos (equivalente al 'or' de Python)
-        LocalDate dte = devo.getDate();
-        String date = (devo.getDate() != null) ? dte.getDayOfMonth() + " de " + dte.getMonth().name().toLowerCase() + " de " + dte.getYear() : "";
+        
+        String date = "";
+
+        if (devo.getDate() != null) {
+            // Definimos el formato y el idioma (Español)
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
+            date = devo.getDate().format(formatter);
+        }
         String title = (devo.getTitle() != null) ? devo.getTitle() : "Sin título";
         String bibleInYear = (devo.getBibleInYear() != null && !devo.getBibleInYear().isEmpty()) ? devo.getBibleInYear()
                 : "No disponible";
