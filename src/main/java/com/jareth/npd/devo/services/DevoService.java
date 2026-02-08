@@ -77,7 +77,8 @@ public class DevoService {
 
     public String getDevoByPlatform(Devo devo, String plataforma) {
         // Valores por defecto para evitar nulos (equivalente al 'or' de Python)
-        String date = (devo.getDate() != null) ? devo.getDate().toString() : "";
+        LocalDate dte = devo.getDate();
+        String date = (devo.getDate() != null) ? dte.getDayOfMonth() + " de " + dte.getMonth().name().toLowerCase() + " de " + dte.getYear() : "";
         String title = (devo.getTitle() != null) ? devo.getTitle() : "Sin título";
         String bibleInYear = (devo.getBibleInYear() != null && !devo.getBibleInYear().isEmpty()) ? devo.getBibleInYear()
                 : "No disponible";
