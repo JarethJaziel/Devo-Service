@@ -157,7 +157,7 @@ public class DevoService {
         return paragraph.stream()
                 .map(Element::text) // Extrae el texto de cada <p>
                 .filter(t -> !t.isBlank()) // Filtra párrafos vacíos
-                .collect(Collectors.joining("\n\n")); // Une con doble salto para mejor legibilidad
+                .collect(Collectors.joining("\n")); // Une con doble salto para mejor legibilidad
 
     }
 
