@@ -104,7 +104,8 @@ public class DevoService {
                     %s
                     *%s*
                     〰〰〰〰〰〰〰
-                    *La Biblia en un año:* %s
+                    *La Biblia en un año:* 
+                    %s
                     〰〰〰〰〰〰〰
                     *La escritura de hoy: %s NTV*
                     %s
